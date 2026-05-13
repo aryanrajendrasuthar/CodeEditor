@@ -15,6 +15,10 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
+    server: {
+      port: 5174,
+      strictPort: false
+    },
     plugins: [
       react(),
       (monacoEditorPlugin as any).default({

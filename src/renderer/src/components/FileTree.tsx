@@ -10,10 +10,10 @@ interface FileTreeProps {
   onFileOpen: (path: string) => void;
   onToggleDir: (path: string) => void;
   onOpenFolder: () => void;
-  onCreateFile: (dirPath: string, name: string) => void;
-  onCreateFolder: (dirPath: string, name: string) => void;
-  onDeleteEntry: (path: string) => void;
-  onRenameEntry: (path: string, newName: string) => void;
+  onCreateFile: (dirPath: string, name: string) => Promise<string>;
+  onCreateFolder: (dirPath: string, name: string) => Promise<string>;
+  onDeleteEntry: (path: string) => Promise<void>;
+  onRenameEntry: (path: string, newName: string) => Promise<string>;
   onReadDir: (path: string) => Promise<FileEntry[]>;
 }
 
@@ -88,19 +88,31 @@ export const FileTree: React.FC<FileTreeProps> = ({
     closeContextMenu();
   }, [closeContextMenu]);
 
-  const submitRename = useCallback(() => {
+  const submitRename = useCallback(async () => {
     if (renamingPath && renameValue.trim()) {
-      onRenameEntry(renamingPath, renameValue.trim());
+      await onRenameEntry(renamingPath, renameValue.trim());
+      // Refresh parent dir in childrenMap
+      const parentDir = renamingPath.split('/').slice(0, -1).join('/');
+      if (parentDir) {
+        const children = await onReadDir(parentDir);
+        setChildrenMap(prev => new Map(prev).set(parentDir, children));
+      }
     }
     setRenamingPath(null);
-  }, [renamingPath, renameValue, onRenameEntry]);
+  }, [renamingPath, renameValue, onRenameEntry, onReadDir]);
 
-  const handleDelete = useCallback((entry: FileEntry) => {
+  const handleDelete = useCallback(async (entry: FileEntry) => {
     if (window.confirm(`Delete "${entry.name}"?`)) {
-      onDeleteEntry(entry.path);
+      await onDeleteEntry(entry.path);
+      // Refresh parent dir in childrenMap
+      const parentDir = entry.path.split('/').slice(0, -1).join('/');
+      if (parentDir) {
+        const children = await onReadDir(parentDir);
+        setChildrenMap(prev => new Map(prev).set(parentDir, children));
+      }
     }
     closeContextMenu();
-  }, [onDeleteEntry, closeContextMenu]);
+  }, [onDeleteEntry, onReadDir, closeContextMenu]);
 
   const startCreate = useCallback((type: 'file' | 'folder') => {
     const dir = contextMenu.target?.isDirectory
@@ -120,10 +132,13 @@ export const FileTree: React.FC<FileTreeProps> = ({
       } else {
         await onCreateFolder(creatingIn.dir, createName.trim());
       }
+      // Refresh the parent dir in childrenMap so the new entry appears immediately
+      const children = await onReadDir(creatingIn.dir);
+      setChildrenMap(prev => new Map(prev).set(creatingIn.dir, children));
     } catch (e) { console.error(e); }
     setCreatingIn(null);
     setCreateName('');
-  }, [creatingIn, createName, onCreateFile, onCreateFolder, onFileOpen]);
+  }, [creatingIn, createName, onCreateFile, onCreateFolder, onFileOpen, onReadDir]);
 
   const refreshChildren = useCallback(async (dirPath: string) => {
     const children = await onReadDir(dirPath);

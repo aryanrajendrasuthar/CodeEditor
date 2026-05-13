@@ -6,13 +6,14 @@ interface StatusBarProps {
   activeTab: Tab | null;
   settings: EditorSettings;
   gitBranch: string | null;
+  isDirty: boolean;
   onLanguageClick: () => void;
   onThemeClick: () => void;
   onSettingsClick: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
-  activeTab, settings, gitBranch,
+  activeTab, settings, gitBranch, isDirty,
   onLanguageClick, onThemeClick, onSettingsClick
 }) => {
   const position = activeTab?.cursorPosition;
@@ -30,8 +31,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
         {activeTab && (
           <div className="status-item">
-            <span className="dot green" />
-            <span>{activeTab.isUntitled ? 'Untitled' : 'Saved'}</span>
+            <span className={`dot ${isDirty ? 'yellow' : 'green'}`} />
+            <span>{activeTab.isUntitled ? 'Untitled' : isDirty ? 'Modified' : 'Saved'}</span>
           </div>
         )}
       </div>

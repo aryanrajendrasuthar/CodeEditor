@@ -69,10 +69,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // ─── Settings ─────────────────────────────────────────────────────────────
-  getSettings: (): Promise<Record<string, unknown>> =>
+  getSettings: (): Promise<Partial<Record<string, unknown>>> =>
     ipcRenderer.invoke('settings:get'),
 
-  setSettings: (settings: Record<string, unknown>): Promise<{ success: boolean }> =>
+  setSettings: (settings: Partial<Record<string, unknown>>): Promise<{ success: boolean }> =>
     ipcRenderer.invoke('settings:set', settings),
 
   // ─── Git ──────────────────────────────────────────────────────────────────

@@ -98,6 +98,11 @@ export const App: React.FC = () => {
     if (tabs.isTabDirty(tabId)) {
       if (!window.confirm('This file has unsaved changes. Close anyway?')) return;
     }
+    const timer = autoSaveTimers.current.get(tabId);
+    if (timer) {
+      clearTimeout(timer);
+      autoSaveTimers.current.delete(tabId);
+    }
     tabs.closeTab(tabId);
   }, [tabs]);
 
@@ -351,6 +356,7 @@ export const App: React.FC = () => {
         activeTab={tabs.activeTab}
         settings={settings}
         gitBranch={gitBranch}
+        isDirty={tabs.activeTabId ? tabs.isTabDirty(tabs.activeTabId) : false}
         onLanguageClick={() => {}}
         onThemeClick={() => setSettingsOpen(true)}
         onSettingsClick={() => setSettingsOpen(true)}
