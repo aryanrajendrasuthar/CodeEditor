@@ -1,5 +1,4 @@
 {
-  "extends": "@electron-vite/tsconfig/web.json",
   "include": ["src/renderer/src/**/*"],
   "compilerOptions": {
     "composite": true,
